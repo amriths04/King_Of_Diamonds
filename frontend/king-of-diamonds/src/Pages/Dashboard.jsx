@@ -1,7 +1,7 @@
 import React from "react";
 import "../styles/Dashboard.css";
 
-export default function Dashboard({ user, score, onLogout }) {
+export default function Dashboard({ user, onLogout }) {
   return (
     <div className="dashboard">
       {/* Main content */}
@@ -17,8 +17,10 @@ export default function Dashboard({ user, score, onLogout }) {
       <div className="side-panel">
         <img src={user.photoURL} alt="Profile" />
         <h3>{user.displayName}</h3>
-        <p>Score: {score}</p>
-        <button className="logout-btn" onClick={onLogout}>Logout</button>
+        <p>Score: {user.score}</p>
+        <p>Games Played: {user.gamesPlayed}</p>
+        <p>Last Login: {user.lastLogin || "N/A"}</p>
+         <button className="logout-btn" onClick={onLogout}>Logout</button>
       </div>
     </div>
   );

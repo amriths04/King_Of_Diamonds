@@ -28,7 +28,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home onLogin={setUser} />} />
+        <Route path="/" element={<Home user={user} onLogin={setUser} />} />
         <Route
           path="/dashboard"
           element={

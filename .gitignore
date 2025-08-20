@@ -5,3 +5,4 @@ node_modules/
 .firebase/
 backend/node_modules/
 frontend/node_modules/
+backend/firebase.js

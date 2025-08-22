@@ -1,0 +1,154 @@
+.lobby-container {
+  max-width: 650px;
+  margin: 30px auto;
+  padding: 25px 20px;
+  text-align: center;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s;
+}
+
+.lobby-container:hover {
+  transform: translateY(-2px);
+}
+
+/* Header with room code */
+.lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.lobby-header h2 {
+  font-size: 30px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.room-code-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.room-label {
+  font-weight: 500;
+  margin-right: 8px;
+  color: #1f2937; /* dark label text */
+  font-size: 16px;
+}
+
+.room-code {
+  background-color: #fee2e2; /* light red background */
+  color: #b91c1c; /* red text */
+  font-weight: bold;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 18px;
+}
+
+.lobby-container p {
+  margin: 6px 0;
+  font-size: 16px;
+  color: #4b5563;
+}
+
+.lobby-container button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  background-color: #3b82f6;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.lobby-container button:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.players-list {
+  margin-top: 25px;
+}
+
+.players-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.players-list li {
+  background: #f3f4f6;
+  margin: 10px 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.player-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  margin-right: 12px;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.host-badge {
+  margin-left: auto;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.players-list li:hover {
+  background: #dbeafe;
+  transform: translateX(2px);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .lobby-container {
+    margin: 20px;
+    padding: 20px 15px;
+  }
+
+  .lobby-header h2 {
+    font-size: 24px;
+  }
+
+  .room-label {
+    font-size: 14px;
+  }
+
+  .room-code {
+    font-size: 16px;
+    padding: 4px 10px;
+  }
+
+  .players-list li {
+    font-size: 14px;
+    padding: 12px 10px;
+  }
+
+  .player-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+}

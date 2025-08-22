@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./Pages/Home";
 import Dashboard from "./Pages/Dashboard";
+import Lobby from "./Pages/Lobby";
 import { auth } from "./firebase";
 import "./App.css";
 
@@ -34,6 +35,16 @@ function App() {
           element={
             user ? (
               <Dashboard user={user} score={score} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/lobby"
+          element={
+            user ? (
+              <Lobby user={user} />
             ) : (
               <Navigate to="/" replace />
             )

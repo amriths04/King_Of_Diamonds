@@ -8,6 +8,11 @@ export const createRoom = async (hostId, roomCode) => {
 
   const snap = await db.collection("rooms").where("roomCode", "==", roomCode).get();
   if (!snap.empty) throw new Error("Room code already used");
+  const userRef = db.collection("users").doc(hostId);
+  const userSnap = await userRef.get();
+  if (!userSnap.exists) 
+    throw new Error("Host user does not exist");
+  const { displayName } = userSnap.data();
 
   const roomRef = db.collection("rooms").doc();
 
@@ -18,12 +23,7 @@ export const createRoom = async (hostId, roomCode) => {
     createdAt: new Date(),
     ttl: Date.now() + 3600000,
     players: [
-      {
-        userId: hostId,
-        name: "",
-        score: 10,
-        isAlive: true,
-      },
+      { userId: hostId, name: displayName || "Host", score: 10, isAlive: true }
     ],
   };
   await roomRef.set(roomData);
@@ -32,84 +32,66 @@ export const createRoom = async (hostId, roomCode) => {
 
 export const joinRoom = async (roomCode, userId) => {
   const roomsRef = db.collection("rooms");
-  const q = roomsRef.where("roomCode", "==", roomCode);
-  const snap = await q.get();
+  const snap = await roomsRef.where("roomCode", "==", roomCode).get();
+  if (snap.empty) throw new Error("Invalid room code");
 
-  if (snap.empty) {
-    throw new Error("Invalid room code");
-  }
-
-  // Get user data from Users collection
   const userRef = db.collection("users").doc(userId);
   const userSnap = await userRef.get();
-
-  if (!userSnap.exists) {
-    throw new Error("User does not exist");
-  }
+  if (!userSnap.exists) throw new Error("User does not exist");
 
   const { displayName } = userSnap.data();
 
   const roomDoc = snap.docs[0];
 
   await roomDoc.ref.update({
-  players: FieldValue.arrayUnion({
-    userId,
-    name: displayName,
-    score: 10,
-    isAlive: true,
-  }),
-});
+    players: FieldValue.arrayUnion({ userId, name: displayName, score: 10, isAlive: true })
+  });
 
   const updatedRoom = await roomDoc.ref.get();
-  return updatedRoom.data();
+  return { ...updatedRoom.data(), roomId: roomDoc.id };
 };
 
-// Leave a room
-export const leaveRoom = async (roomId, userId) => {
-  const roomRef = doc(db, "rooms", roomId);
-  const roomSnap = await getDoc(roomRef);
+export const leaveRoom = async (roomCode, userId) => {
+  if (!roomCode || !userId) throw new Error("roomCode and userId required");
 
-  if (!roomSnap.exists()) throw new Error("Room does not exist");
+  const roomsRef = db.collection("rooms");
+  const snap = await roomsRef.where("roomCode", "==", roomCode).get();
+  if (snap.empty) throw new Error("Room not found");
 
-  const roomData = roomSnap.data();
-  const player = roomData.players.find((p) => p.userId === userId);
-  if (!player) throw new Error("Player not in room");
+  const roomDoc = snap.docs[0];
+  const roomData = roomDoc.data();
 
-  await updateDoc(roomRef, {
-    players: arrayRemove(player),
-  });
-
-  // Delete room if host leaves or no players remain
-  const remainingPlayers = roomData.players.filter((p) => p.userId !== userId);
-  if (roomData.hostId === userId || remainingPlayers.length === 0) {
-    await deleteDoc(roomRef);
+  // Find the player in the room
+  const playerIndex = roomData.players.findIndex(p => p.userId === userId);
+  if (playerIndex === -1) {
+    return { message: "User was not in the room", players: roomData.players };
   }
 
-  return true;
+  // Remove the player
+  const updatedPlayers = [...roomData.players];
+  updatedPlayers.splice(playerIndex, 1);
+  await roomDoc.ref.update({ players: updatedPlayers });
+
+  // Delete room if host left and no players remain
+  if (roomData.hostId === userId && updatedPlayers.length === 0) {
+    await roomDoc.ref.delete();
+    return { message: "Room deleted", players: [] };
+  }
+
+  return { message: "User left the room", players: updatedPlayers };
 };
 
-// Start the game (host only)
-export const startGame = async (roomId) => {
-  const roomRef = doc(db, "rooms", roomId);
-  const roomSnap = await getDoc(roomRef);
-  if (!roomSnap.exists()) throw new Error("Room does not exist");
 
-  await updateDoc(roomRef, {
-    status: "started",
-  });
 
-  return (await getDoc(roomRef)).data();
-};
+export const deleteRoom = async (roomCode) => {
+  if (!roomCode) throw new Error("roomCode required");
 
-// Cancel countdown / reset to waiting
-export const cancelCountdown = async (roomId) => {
-  const roomRef = doc(db, "rooms", roomId);
-  const roomSnap = await getDoc(roomRef);
-  if (!roomSnap.exists()) throw new Error("Room does not exist");
+  const roomsRef = db.collection("rooms");
+  const snap = await roomsRef.where("roomCode", "==", roomCode).get();
+  if (snap.empty) throw new Error("Room not found");
 
-  await updateDoc(roomRef, {
-    status: "waiting",
-  });
+  const roomDoc = snap.docs[0];
+  await roomDoc.ref.delete();
 
-  return (await getDoc(roomRef)).data();
+  return { message: `Room ${roomCode} deleted` };
 };

@@ -1,23 +1,21 @@
 import React, { useState } from "react";
 
-const JoinGameDialog = ({ onClose, onJoin, availableRooms = [] }) => {
-  const [roomId, setRoomId] = useState("");
+const JoinGame = ({ onClose, onJoin, availableRooms = [] }) => {
+  const [roomCode, setRoomCode] = useState("");
   const [error, setError] = useState("");
 
-  const handleJoin = () => {
-    if (!roomId) {
-      setError("Enter a Room ID or select a room");
+  const handleJoin = (code) => {
+    const trimmedCode = code.trim();
+    if (!trimmedCode) {
+      setError("Enter a Room Code or select a room");
       return;
     }
     setError("");
-    onJoin(roomId);
+    onJoin(trimmedCode); // Dashboard handles Firestore join → returns roomId
   };
 
-  // Close if clicking on backdrop (outside dialog)
   const handleBackdropClick = (e) => {
-    if (e.target.className === "dialog-backdrop") {
-      onClose();
-    }
+    if (e.target.className === "dialog-backdrop") onClose();
   };
 
   return (
@@ -26,24 +24,25 @@ const JoinGameDialog = ({ onClose, onJoin, availableRooms = [] }) => {
         <h2>Join Game</h2>
         <input
           type="text"
-          placeholder="Enter Room ID"
-          value={roomId}
-          onChange={(e) => setRoomId(e.target.value)}
+          placeholder="Enter Room Code"
+          value={roomCode}
+          onChange={(e) => setRoomCode(e.target.value)}
         />
         <ul>
           {availableRooms.map((room) => (
-            <li key={room._id}>
-              {room.name || room._id} ({room.players.length} players)
-              <button onClick={() => onJoin(room._id)}>Join</button>
+            <li key={room.roomCode}>
+              {room.name || room.roomCode} ({room.players?.length || 0} players)
+              <button onClick={() => handleJoin(room.roomCode)}>Join</button>
             </li>
           ))}
         </ul>
         {error && <p className="error">{error}</p>}
-        <button onClick={handleJoin}>Join</button>
+
+        <button onClick={() => handleJoin(roomCode)}>Join</button>
         <button onClick={onClose}>Cancel</button>
       </div>
     </div>
   );
 };
 
-export default JoinGameDialog;
+export default JoinGame;

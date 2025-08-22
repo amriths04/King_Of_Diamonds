@@ -1,8 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 
-const JoinGame = ({ onClose, onJoin, availableRooms = [] }) => {
+const JoinGame = ({ onClose, onJoin }) => {
   const [roomCode, setRoomCode] = useState("");
+  const [availableRooms, setAvailableRooms] = useState([]);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Listen to rooms where status === 'waiting'
+    const q = query(collection(db, "rooms"), where("status", "==", "waiting"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const rooms = snapshot.docs.map((doc) => ({
+        roomId: doc.id,
+        ...doc.data(),
+      }));
+      setAvailableRooms(rooms);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleJoin = (code) => {
     const trimmedCode = code.trim();
@@ -30,8 +47,8 @@ const JoinGame = ({ onClose, onJoin, availableRooms = [] }) => {
         />
         <ul>
           {availableRooms.map((room) => (
-            <li key={room.roomCode}>
-              {room.name || room.roomCode} ({room.players?.length || 0} players)
+            <li key={room.roomId}>
+              {room.roomCode} ({room.players?.length || 0} players)
               <button onClick={() => handleJoin(room.roomCode)}>Join</button>
             </li>
           ))}

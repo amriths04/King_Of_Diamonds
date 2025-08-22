@@ -131,40 +131,113 @@
   box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
 
-/* Dialog common styles */
+/* Backdrop */
+.dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Dialog box */
 .dialog {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background: rgba(20, 20, 40, 0.95);
-  padding: 30px;
+  padding: 30px 25px;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   width: 90%;
-  max-width: 400px;
+  max-width: 450px;
   color: #fff;
   display: flex;
   flex-direction: column;
   gap: 15px;
+  z-index: 1001;
 }
 
 .dialog h2 {
   margin: 0;
   text-align: center;
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
-.dialog input,
-.dialog select {
-  padding: 10px;
+/* Input */
+.dialog input[type="text"] {
+  padding: 10px 12px;
   border-radius: 8px;
   border: none;
   font-size: 1rem;
+  outline: none;
 }
 
-.dialog button {
+/* Error message */
+.dialog .error {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Room list */
+.dialog ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dialog li {
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.dialog li:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(2px);
+}
+
+/* Player info in room */
+.dialog li span {
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.dialog li button {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.dialog li button:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+}
+
+/* Main join/cancel buttons */
+.dialog button.main {
   padding: 12px;
   border-radius: 8px;
   border: none;
@@ -175,26 +248,47 @@
   transition: all 0.3s ease-in-out;
 }
 
-.dialog button:hover {
+.dialog button.main:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 5px 20px rgba(0,0,0,0.3);
 }
 
-.dialog .error {
-  color: #ff6b6b;
-  font-size: 0.9rem;
-  text-align: center;
-}
-.dialog-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
+/* Scrollbar for room list */
+.dialog ul::-webkit-scrollbar {
+  width: 6px;
 }
 
+.dialog ul::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .dialog {
+    padding: 25px 20px;
+    max-width: 90%;
+  }
+
+  .dialog h2 {
+    font-size: 1.3rem;
+  }
+
+  .dialog input[type="text"] {
+    font-size: 0.95rem;
+  }
+
+  .dialog li span {
+    font-size: 0.85rem;
+  }
+
+  .dialog li button {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+
+  .dialog button.main {
+    padding: 10px;
+    font-size: 0.95rem;
+  }
+}

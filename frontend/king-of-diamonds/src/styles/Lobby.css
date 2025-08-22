@@ -152,3 +152,18 @@
     font-size: 14px;
   }
 }
+/* Start Game Button - only for host */
+button.start-btn {
+  background-color: #10b981; /* green */
+  color: #fff;
+  font-weight: 600;
+  margin-left: 10px;
+  border-radius: 10px;
+  padding: 10px 20px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+button.start-btn:hover {
+  background-color: #059669; /* darker green on hover */
+  transform: translateY(-2px);
+}

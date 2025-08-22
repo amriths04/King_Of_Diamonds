@@ -4,7 +4,7 @@ import { db } from "../firebase";
 import { doc, onSnapshot, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import "../styles/Lobby.css";
 
-export default function Lobby({user}) {
+export default function Lobby({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { roomCode: stateRoomCode, roomId: stateRoomId, userId } = location.state || {};
@@ -30,7 +30,6 @@ export default function Lobby({user}) {
 
       const data = snapshot.data();
 
-      // Fetch each player's name dynamically if missing
       const updatedPlayers = await Promise.all(
         (data.players || []).map(async (p) => {
           if (!p.name) {
@@ -75,6 +74,17 @@ export default function Lobby({user}) {
     }
   };
 
+  // Handle starting the game (only host)
+  const handleStartGame = async () => {
+    try {
+      const roomRef = doc(db, "rooms", stateRoomId);
+      await updateDoc(roomRef, { status: "started" });
+      navigate("/game", { state: { roomId: stateRoomId, userId } });
+    } catch (err) {
+      console.error("Failed to start game:", err);
+    }
+  };
+
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       e.preventDefault();
@@ -87,18 +97,22 @@ export default function Lobby({user}) {
   return (
     <div className="lobby-container">
       <div className="lobby-header">
-  <h2>Lobby</h2>
-  <div className="room-code-wrapper">
-    <span className="room-label">Room Code:</span>
-    <span className="room-code">{stateRoomCode}</span>
-  </div>
-</div>
-
+        <h2>Lobby</h2>
+        <div className="room-code-wrapper">
+          <span className="room-label">Room Code:</span>
+          <span className="room-code">{stateRoomCode}</span>
+        </div>
+      </div>
 
       <p><strong>Host ID:</strong> {hostId}</p>
       <p><strong>Status:</strong> {status}</p>
 
-      <button onClick={handleLeave}>Leave Lobby</button>
+      <div>
+        <button className="leave-btn" onClick={handleLeave}>Leave Lobby</button>
+        {userId === hostId && status === "waiting" && (
+          <button className="start-btn" onClick={handleStartGame}>Start Game</button>
+        )}
+      </div>
 
       <div className="players-list">
         <h3>Players</h3>

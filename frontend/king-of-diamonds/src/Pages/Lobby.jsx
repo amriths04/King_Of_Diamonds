@@ -47,6 +47,11 @@ export default function Lobby({ user }) {
       setPlayers(updatedPlayers);
       setHostId(data.hostId);
       setStatus(data.status || "waiting");
+
+      // Navigate all players when host starts the game
+      if (data.status === "started") {
+        navigate("/game", { state: { roomId: stateRoomId, userId } });
+      }
     });
 
     return () => unsub();
@@ -79,20 +84,13 @@ export default function Lobby({ user }) {
     try {
       const roomRef = doc(db, "rooms", stateRoomId);
       await updateDoc(roomRef, { status: "started" });
-      navigate("/game", { state: { roomId: stateRoomId, userId } });
+
+      // Backend socket will create a game room when host emits joinGameRoom
+      // All clients navigate automatically via Firestore listener above
     } catch (err) {
       console.error("Failed to start game:", err);
     }
   };
-
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = "Are you sure you want to leave? You will exit the room!";
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, []);
 
   return (
     <div className="lobby-container">

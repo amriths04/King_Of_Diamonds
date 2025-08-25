@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Home from "./Pages/Home";
 import Dashboard from "./Pages/Dashboard";
 import Lobby from "./Pages/Lobby";
+import Game from "./Pages/Game";
 import { auth } from "./firebase";
 import "./App.css";
 
@@ -45,6 +46,15 @@ function App() {
           element={
             user ? (
               <Lobby user={user} />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        /><Route
+          path="/game"
+          element={
+            user ? (
+              <Game user={user} />
             ) : (
               <Navigate to="/" replace />
             )

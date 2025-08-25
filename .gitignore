@@ -7,5 +7,4 @@ backend/node_modules/
 frontend/node_modules/
 
 .env
-frontend/king-of-diamonds/src/firebase.js
 backend/serviceAccountKey.json

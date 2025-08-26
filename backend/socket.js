@@ -140,15 +140,10 @@ function startRoundTimer(io, roomId) {
           }
         });
 
-        // Check for GAME CLEAR
+        // Survivors left
         const survivors = room.players.filter(p => !p.eliminated);
-        if (survivors.length === 1) {
-          io.to(roomId).emit("gameClear", { winner: survivors[0].userId });
-          console.log(`[DEBUG] GAME CLEAR for ${survivors[0].userId}`);
-          return; // stop game loop
-        }
 
-        // Emit inter-round results (show submissions + target + scores)
+        // ✅ Always emit round results first
         io.to(roomId).emit("roundResult", {
           round: room.currentRound,
           submissions: room.submissions,
@@ -156,6 +151,15 @@ function startRoundTimer(io, roomId) {
           winnerId,
           scores: room.scores
         });
+
+        // ✅ If game ends, delay GAME CLEAR so UI shows results
+        if (survivors.length === 1) {
+          setTimeout(() => {
+            io.to(roomId).emit("gameClear", { winner: survivors[0].userId });
+            console.log(`[DEBUG] GAME CLEAR for ${survivors[0].userId}`);
+          }, 3000); // wait 3s after showing roundResult
+          return;
+        }
 
         // Start inter-round countdown
         let interRoundTime = interRoundDuration;

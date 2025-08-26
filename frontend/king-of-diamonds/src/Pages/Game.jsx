@@ -127,16 +127,6 @@ export default function Game({ user }) {
             </ul>
             <p>Target (avg * 0.8): {target.toFixed(2)}</p>
           </div>
-          <div className="scores">
-            <h4>Live Scores</h4>
-            <ul>
-              {players.map((p) => (
-                <li key={p.userId}>
-                  {p.userId}: {scores[p.userId]}
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
       ) : (
         <div className="round">

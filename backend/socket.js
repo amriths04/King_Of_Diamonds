@@ -6,41 +6,38 @@ export default function initSocket(io) {
     console.log("[DEBUG] User connected:", socket.id);
 
     // Join a game room when host starts
-    socket.on("joinGameRoom", ({ roomId, userId }) => {
-      console.log(`[DEBUG] ${userId} joining room ${roomId}`);
+socket.on("joinGameRoom", ({ roomId, userId, name, photoURL }) => {
+  if (!rooms[roomId]) {
+    rooms[roomId] = { 
+      players: [], 
+      currentRound: 1, 
+      submissions: {}, 
+      scores: {}, 
+      status: "started",
+      roundRunning: false
+    };
+  }
 
-      if (!rooms[roomId]) {
-        rooms[roomId] = { 
-          players: [], 
-          currentRound: 1, 
-          submissions: {}, 
-          scores: {}, 
-          status: "started",
-          roundRunning: false
-        };
-        console.log(`[DEBUG] Created new room ${roomId}`);
-      }
-
-      // Add player if not exists
-      if (!rooms[roomId].players.find(p => p.userId === userId)) {
-        rooms[roomId].players.push({ userId, socketId: socket.id, eliminated: false });
-        rooms[roomId].scores[userId] = 0;
-        console.log(`[DEBUG] Added player ${userId} to room ${roomId}`);
-      }
-
-      socket.join(roomId);
-      console.log(`[DEBUG] ${userId} (${socket.id}) joined socket room ${roomId}`);
-
-      // Broadcast updated players list to all in room
-      io.to(roomId).emit("joinedRoom", rooms[roomId]);
-
-      // Start round timer if not already running
-      if (!rooms[roomId].roundRunning) {
-        console.log(`[DEBUG] Starting first round timer for room ${roomId}`);
-        rooms[roomId].roundRunning = true;
-        startRoundTimer(io, roomId);
-      }
+  if (!rooms[roomId].players.find(p => p.userId === userId)) {
+    rooms[roomId].players.push({ 
+      userId, 
+      name, 
+      photoURL, 
+      socketId: socket.id, 
+      eliminated: false 
     });
+    rooms[roomId].scores[userId] = 0;
+  }
+
+  socket.join(roomId);
+  io.to(roomId).emit("joinedRoom", rooms[roomId]);
+
+  if (!rooms[roomId].roundRunning) {
+    rooms[roomId].roundRunning = true;
+    startRoundTimer(io, roomId);
+  }
+});
+
 
     // ✅ Player submits number (only final choice at timer end)
     socket.on("submitNumber", ({ roomId, userId, number }) => {

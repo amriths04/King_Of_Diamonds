@@ -30,7 +30,12 @@ export default function Game({ user }) {
     const newSocket = io(SOCKET_URL);
     setSocket(newSocket);
 
-    newSocket.emit("joinGameRoom", { roomId, userId });
+    newSocket.emit("joinGameRoom", {
+      roomId,
+      userId,
+      name: user?.displayName,
+      photoURL: user?.photoURL,
+    });
 
     newSocket.on("joinedRoom", (room) => {
       setPlayers(room.players);
@@ -116,8 +121,12 @@ export default function Game({ user }) {
             <ul>
               {players.map((p) => (
                 <li key={p.userId}>
-                  {p.userId === userId ? <strong>{p.userId}</strong> : p.userId}:{" "}
-                  {submissions[p.userId] ?? 0}
+                  {p.userId === userId ? (
+                    <strong>{p.name ?? p.userId}</strong>
+                  ) : (
+                    p.name ?? p.userId
+                  )}
+                  : {submissions[p.userId] ?? 0}
                   {p.userId === winnerId && <span> 🏆</span>}
                   {eliminatedPlayers.includes(p.userId) && (
                     <span style={{ color: "red" }}> ❌ Eliminated</span>
@@ -131,7 +140,9 @@ export default function Game({ user }) {
       ) : (
         <div className="round">
           {isEliminated ? (
-            <p style={{ color: "red" }}>❌ You are eliminated. Spectating only.</p>
+            <p style={{ color: "red" }}>
+              ❌ You are eliminated. Spectating only.
+            </p>
           ) : (
             <p>Time remaining: {roundTime}s</p>
           )}
@@ -168,7 +179,7 @@ export default function Game({ user }) {
         <ul>
           {players.map((p) => (
             <li key={p.userId}>
-              {p.userId}: {scores[p.userId]}
+              {p.name ?? p.userId}: {scores[p.userId]}
             </li>
           ))}
         </ul>

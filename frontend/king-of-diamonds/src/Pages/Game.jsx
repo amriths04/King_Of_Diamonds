@@ -119,20 +119,32 @@ export default function Game({ user }) {
           <div className="results">
             <h4>Submissions</h4>
             <ul>
-              {players.map((p) => (
-                <li key={p.userId}>
-                  {p.userId === userId ? (
-                    <strong>{p.name ?? p.userId}</strong>
-                  ) : (
-                    p.name ?? p.userId
-                  )}
-                  : {submissions[p.userId] ?? 0}
-                  {p.userId === winnerId && <span> 🏆</span>}
-                  {eliminatedPlayers.includes(p.userId) && (
-                    <span style={{ color: "red" }}> ❌ Eliminated</span>
-                  )}
-                </li>
-              ))}
+              {players.map((p) => {
+                const isSelf = p.userId === userId;
+
+                return (
+                  <li key={p.userId} className="player-item">
+                    {/* Avatar Circle */}
+                    <div
+                      className={`avatar-circle ${isSelf ? "self" : "other"}`}
+                    >
+                      👤
+                    </div>
+
+                    {/* Name + Score/Submission */}
+                    <div className="player-info">
+                      <span className={isSelf ? "self-name" : ""}>
+                        {p.name ?? p.userId}
+                      </span>
+                      : {submissions[p.userId] ?? 0}
+                      {p.userId === winnerId && <span> 🏆</span>}
+                      {eliminatedPlayers.includes(p.userId) && (
+                        <span style={{ color: "red" }}> ❌ Eliminated</span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
             <p>Target (avg * 0.8): {target.toFixed(2)}</p>
           </div>
@@ -177,11 +189,30 @@ export default function Game({ user }) {
       <div className="scores">
         <h4>Live Scores</h4>
         <ul>
-          {players.map((p) => (
-            <li key={p.userId}>
-              {p.name ?? p.userId}: {scores[p.userId]}
-            </li>
-          ))}
+          {players.map((p) => {
+            const isSelf = p.userId === userId;
+
+            return (
+              <li key={p.userId} className="player-item">
+                {/* Avatar Circle */}
+                <div className={`avatar-circle ${isSelf ? "self" : "other"}`}>
+                  👤
+                </div>
+
+                {/* Name + Score/Submission */}
+                <div className="player-info">
+                  <span className={isSelf ? "self-name" : ""}>
+                    {p.name ?? p.userId}
+                  </span>
+                  : {scores[p.userId] ?? 0}
+                  {p.userId === winnerId && <span> 🏆</span>}
+                  {eliminatedPlayers.includes(p.userId) && (
+                    <span style={{ color: "red" }}> ❌ Eliminated</span>
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

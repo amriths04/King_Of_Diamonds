@@ -19,7 +19,7 @@ export default function Game({ user }) {
   const [interRoundTime, setInterRoundTime] = useState(0);
   const [submissions, setSubmissions] = useState({});
   const [target, setTarget] = useState(0);
-  const [winnerId, setWinnerId] = useState(null);
+  const [winners, setWinners] = useState([]);
 
   const [eliminatedPlayers, setEliminatedPlayers] = useState([]);
   const [gameClearWinner, setGameClearWinner] = useState(null);
@@ -44,13 +44,13 @@ export default function Game({ user }) {
     });
 
     // Round ends → inter-round
-    newSocket.on("roundResult", ({ submissions, target, winnerId, scores }) => {
-      setSubmissions(submissions);
-      setTarget(target);
-      setWinnerId(winnerId);
-      setScores(scores);
-      setInterRoundTime(30); // start inter-round timer
-    });
+    newSocket.on("roundResult", ({ submissions, target, winners, scores }) => {
+   setSubmissions(submissions);
+   setTarget(target);
+   setWinners(winners);   // now an array
+   setScores(scores);
+   setInterRoundTime(30); // start inter-round timer
+ });
 
     // Inter-round countdown
     newSocket.on("interRoundTimer", (time) => setInterRoundTime(time));
@@ -61,7 +61,7 @@ export default function Game({ user }) {
       setChosenNumber(null);
       setSubmissions({});
       setTarget(0);
-      setWinnerId(null);
+      setWinners([]);
       setRoundTime(30);
     });
 
@@ -137,7 +137,7 @@ export default function Game({ user }) {
                         {p.name ?? p.userId}
                       </span>
                       : {submissions[p.userId] ?? 0}
-                      {p.userId === winnerId && <span> 🏆</span>}
+                      {winners?.includes(p.userId) && <span> 🏆</span>}
                       {eliminatedPlayers.includes(p.userId) && (
                         <span style={{ color: "red" }}> ❌ Eliminated</span>
                       )}
@@ -205,7 +205,7 @@ export default function Game({ user }) {
                     {p.name ?? p.userId}
                   </span>
                   : {scores[p.userId] ?? 0}
-                  {p.userId === winnerId && <span> 🏆</span>}
+                  {winners?.includes(p.userId) && <span> 🏆</span>}
                   {eliminatedPlayers.includes(p.userId) && (
                     <span style={{ color: "red" }}> ❌ Eliminated</span>
                   )}

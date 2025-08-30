@@ -1,42 +1,42 @@
 // in-memory game sessions (shared across all sockets)
-const rooms = {}; 
+const rooms = {};
 
 export default function initSocket(io) {
   io.on("connection", (socket) => {
     console.log("[DEBUG] User connected:", socket.id);
 
     // Join a game room when host starts
-socket.on("joinGameRoom", ({ roomId, userId, name, photoURL }) => {
-  if (!rooms[roomId]) {
-    rooms[roomId] = { 
-      players: [], 
-      currentRound: 1, 
-      submissions: {}, 
-      scores: {}, 
-      status: "started",
-      roundRunning: false
-    };
-  }
+    socket.on("joinGameRoom", ({ roomId, userId, name, photoURL }) => {
+      if (!rooms[roomId]) {
+        rooms[roomId] = {
+          players: [],
+          currentRound: 1,
+          submissions: {},
+          scores: {},
+          status: "started",
+          roundRunning: false
+        };
+      }
 
-  if (!rooms[roomId].players.find(p => p.userId === userId)) {
-    rooms[roomId].players.push({ 
-      userId, 
-      name, 
-      photoURL, 
-      socketId: socket.id, 
-      eliminated: false 
+      if (!rooms[roomId].players.find(p => p.userId === userId)) {
+        rooms[roomId].players.push({
+          userId,
+          name,
+          photoURL,
+          socketId: socket.id,
+          eliminated: false
+        });
+        rooms[roomId].scores[userId] = 0;
+      }
+
+      socket.join(roomId);
+      io.to(roomId).emit("joinedRoom", rooms[roomId]);
+
+      if (!rooms[roomId].roundRunning) {
+        rooms[roomId].roundRunning = true;
+        startRoundTimer(io, roomId);
+      }
     });
-    rooms[roomId].scores[userId] = 0;
-  }
-
-  socket.join(roomId);
-  io.to(roomId).emit("joinedRoom", rooms[roomId]);
-
-  if (!rooms[roomId].roundRunning) {
-    rooms[roomId].roundRunning = true;
-    startRoundTimer(io, roomId);
-  }
-});
 
 
     // ✅ Player submits number (only final choice at timer end)
@@ -108,27 +108,37 @@ function startRoundTimer(io, roomId) {
         const activePlayers = room.players.filter(p => !p.eliminated);
         const numbers = activePlayers.map(p => room.submissions[p.userId] ?? 0);
 
-        const avg = numbers.length > 0 
-          ? numbers.reduce((a, b) => a + b, 0) / numbers.length 
+        const avg = numbers.length > 0
+          ? numbers.reduce((a, b) => a + b, 0) / numbers.length
           : 0;
         const target = avg * 0.8;
         console.log(`[DEBUG] Avg: ${avg}, Target: ${target}`);
 
-        // Determine winner among active players
-        let winnerId = null, closest = Infinity;
+        // Determine winners among active players
+        let closest = Infinity;
+        let winners = [];
+
         for (const p of activePlayers) {
           const val = room.submissions[p.userId] ?? 0;
           const diff = Math.abs(val - target);
-          console.log(`[DEBUG] Player ${p.userId} chose ${val}, diff = ${diff}`);
-          if (diff < closest) { closest = diff; winnerId = p.userId; }
-        }
-        console.log(`[DEBUG] Winner is ${winnerId} with diff ${closest}`);
 
-        // Update scores and check elimination
+          console.log(`[DEBUG] Player ${p.userId} chose ${val}, diff = ${diff}`);
+
+          if (diff < closest) {
+            closest = diff;
+            winners = [p.userId];   // reset winners
+          } else if (diff === closest) {
+            winners.push(p.userId); // allow tie
+          }
+        }
+        console.log(`[DEBUG] Winners: ${winners}, diff = ${closest}`);
+
+        // Update scores + check elimination
         activePlayers.forEach(p => {
-          if (p.userId !== winnerId) {
+          if (!winners.includes(p.userId)) {
             room.scores[p.userId] -= 1;
             console.log(`[DEBUG] Deducted score from ${p.userId}, now = ${room.scores[p.userId]}`);
+
             if (room.scores[p.userId] <= -10 && !p.eliminated) {
               p.eliminated = true;
               io.to(roomId).emit("playerEliminated", { playerId: p.userId });
@@ -145,7 +155,7 @@ function startRoundTimer(io, roomId) {
           round: room.currentRound,
           submissions: room.submissions,
           target,
-          winnerId,
+          winners, // now an array
           scores: room.scores
         });
 
@@ -154,9 +164,10 @@ function startRoundTimer(io, roomId) {
           setTimeout(() => {
             io.to(roomId).emit("gameClear", { winner: survivors[0].userId });
             console.log(`[DEBUG] GAME CLEAR for ${survivors[0].userId}`);
-          }, 3000); // wait 3s after showing roundResult
+          }, 3000);
           return;
         }
+
 
         // Start inter-round countdown
         let interRoundTime = interRoundDuration;
@@ -174,7 +185,7 @@ function startRoundTimer(io, roomId) {
             console.log(`[DEBUG] Starting new round ${room.currentRound} in room ${roomId}`);
             io.to(roomId).emit("newRound", room.currentRound);
 
-            startRoundTimer(io, roomId); 
+            startRoundTimer(io, roomId);
           }
         }, 1000);
       }, 2000);

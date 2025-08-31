@@ -48,7 +48,7 @@ const JoinGame = ({ onClose, onJoin }) => {
         <ul>
           {availableRooms.map((room) => (
             <li key={room.roomId}>
-              {room.roomCode} ({room.players?.length || 0} players)
+              {room.roomCode} ({room.players?.length || 0}/5)
               <button onClick={() => handleJoin(room.roomCode)}>Join</button>
             </li>
           ))}

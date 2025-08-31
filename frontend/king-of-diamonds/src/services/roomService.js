@@ -23,6 +23,7 @@ export const createRoom = async ({ hostId, roomCode, hostName }) => {
   return { ...roomData, roomId: roomRef.id };
 };
 
+const MAX_PLAYERS = 2;
 // Join an existing room
 export const joinRoom = async ({ roomCode, userId }) => {
   if (!roomCode || !userId) throw new Error("roomCode and userId required");
@@ -36,6 +37,12 @@ export const joinRoom = async ({ roomCode, userId }) => {
   const roomDoc = snap.docs[0];
   const roomRef = doc(db, "rooms", roomDoc.id);
   const roomData = roomDoc.data();
+  if (roomData.players.length >= MAX_PLAYERS) {
+    throw new Error(`Room is full (max ${MAX_PLAYERS} players)`);
+  }
+  if (roomData.players.some(p => p.userId === userId)) {
+    return { ...roomData, roomId: roomDoc.id };
+  }
 
   // Fetch username from 'users' collection
   let userName = "Anonymous";
@@ -49,14 +56,11 @@ export const joinRoom = async ({ roomCode, userId }) => {
     console.warn("Could not fetch username:", err);
   }
 
-  // Avoid duplicate entries
-  if (!roomData.players.some(p => p.userId === userId)) {
-    const updatedPlayers = [...roomData.players, { userId, name: userName, isAlive: true }];
-    await updateDoc(roomRef, { players: updatedPlayers });
-    roomData.players = updatedPlayers;
-  }
+  // ✅ Safe to add new player
+  const updatedPlayers = [...roomData.players, { userId, name: userName, isAlive: true }];
+  await updateDoc(roomRef, { players: updatedPlayers });
 
-  return { ...roomData, roomId: roomRef.id };
+  return { ...roomData, players: updatedPlayers, roomId: roomRef.id };
 };
 
 // Leave a room

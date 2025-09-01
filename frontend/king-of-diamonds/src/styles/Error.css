@@ -1,0 +1,62 @@
+.error-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.error-box {
+  background: #fff;
+  color: #333;
+  padding: 10px 18px;
+  border-radius: 10px;
+  max-width: 320px;
+  width: 85%;
+  box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  animation: fadeInScale 0.25s ease;
+}
+
+.error-title {
+  margin: 0 0 5px;
+  font-size: 3.3rem;
+  color: #e74c3c;
+}
+
+.error-message {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.error-close {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.error-close:hover {
+  background: #c0392b;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

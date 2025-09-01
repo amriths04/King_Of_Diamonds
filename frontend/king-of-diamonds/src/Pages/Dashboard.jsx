@@ -31,25 +31,30 @@ export default function Dashboard({ user, onLogout }) {
   };
 
   // ✅ Join Room Handler
-  const handleJoin = async (roomCode) => {
-    try {
-      const response = await roomService.joinRoom({
-  roomCode,
-  userId: user?.uid,
-  userName: user?.displayName,
-});
+const handleJoin = async (roomCode) => {
+  const response = await roomService.joinRoom({
+    roomCode,
+    userId: user?.uid,
+    userName: user?.displayName,
+  });
 
+  if (response?.error) {
+    return response;  
+  }
 
-      console.log("✅ Joined room:", response);
-      setShowJoinDialog(false);
+  console.log("✅ Joined room:", response);
+  setShowJoinDialog(false);
 
-      navigate("/lobby", { state: { roomCode: response.roomCode, roomId: response.roomId, userId: user.uid } });
+  navigate("/lobby", {
+    state: {
+      roomCode: response.roomCode,
+      roomId: response.roomId,
+      userId: user.uid,
+    },
+  });
 
-    } catch (err) {
-      console.error("❌ Error joining room:", err.message);
-      alert(err.message);
-    }
-  };
+  return response;
+};
 
   return (
     <div className="dashboard">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
+import Error from "../components/Error";
 
 const JoinGame = ({ onClose, onJoin }) => {
   const [roomCode, setRoomCode] = useState("");
@@ -21,15 +22,23 @@ const JoinGame = ({ onClose, onJoin }) => {
     return () => unsubscribe();
   }, []);
 
-  const handleJoin = (code) => {
-    const trimmedCode = code.trim();
-    if (!trimmedCode) {
-      setError("Enter a Room Code or select a room");
-      return;
-    }
+const handleJoin = async (code) => {
+  const trimmedCode = code.trim();
+  if (!trimmedCode) {
+    setError("Enter a Room Code or select a room");
+    return;
+  }
+
+  const res = await onJoin(trimmedCode);
+
+  if (res?.error) {
+    setError(res.error);
+  } else {
     setError("");
-    onJoin(trimmedCode); // Dashboard handles Firestore join → returns roomId
-  };
+    // proceed if success
+  }
+};
+
 
   const handleBackdropClick = (e) => {
     if (e.target.className === "dialog-backdrop") onClose();
@@ -58,6 +67,7 @@ const JoinGame = ({ onClose, onJoin }) => {
         <button onClick={() => handleJoin(roomCode)}>Join</button>
         <button onClick={onClose}>Cancel</button>
       </div>
+      {error && <Error message={error} onClose={() => setError("")} />}
     </div>
   );
 };

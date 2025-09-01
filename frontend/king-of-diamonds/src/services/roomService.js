@@ -26,19 +26,23 @@ export const createRoom = async ({ hostId, roomCode, hostName }) => {
 const MAX_PLAYERS = 2;
 // Join an existing room
 export const joinRoom = async ({ roomCode, userId }) => {
-  if (!roomCode || !userId) throw new Error("roomCode and userId required");
+  if (!roomCode || !userId) {
+    return { error: "roomCode and userId required" };
+  }
 
   const roomsRef = collection(db, "rooms");
   const q = query(roomsRef, where("roomCode", "==", roomCode));
   const snap = await getDocs(q);
 
-  if (snap.empty) throw new Error("Room not found");
+  if (snap.empty) {
+    return { error: "Room not found" };
+  }
 
   const roomDoc = snap.docs[0];
   const roomRef = doc(db, "rooms", roomDoc.id);
   const roomData = roomDoc.data();
   if (roomData.players.length >= MAX_PLAYERS) {
-    throw new Error(`Room is full (max ${MAX_PLAYERS} players)`);
+    return { error: `Room is full (max ${MAX_PLAYERS} players)` };
   }
   if (roomData.players.some(p => p.userId === userId)) {
     return { ...roomData, roomId: roomDoc.id };

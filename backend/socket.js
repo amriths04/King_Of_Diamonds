@@ -10,11 +10,12 @@ export default function initSocket(io) {
       if (!rooms[roomId]) {
         rooms[roomId] = {
           players: [],
-          currentRound: 1,
+          currentRound: 0,
           submissions: {},
           scores: {},
           status: "started",
-          roundRunning: false
+          roundRunning: false,
+          isInfoRound: true
         };
       }
 
@@ -78,9 +79,35 @@ export default function initSocket(io) {
 function startRoundTimer(io, roomId) {
   const roundDuration = 20;      // Round countdown
   const interRoundDuration = 20; // Inter-round countdown
-
+  const infoDuration = 30;
   const room = rooms[roomId];
   if (!room) return;
+  if (room.currentRound === 0 && room.isInfoRound) {
+    let infoTime = infoDuration;
+    console.log(`[DEBUG] INFO ROUND 0 started in room ${roomId}`);
+
+    const infoInterval = setInterval(() => {
+      infoTime--;
+      io.to(roomId).emit("infoRoundTimer", infoTime);
+
+      if (infoTime <= 0) {
+        clearInterval(infoInterval);
+
+        // After rules → go to Round 1
+        room.currentRound = 1;
+        room.isInfoRound = false;
+        room.submissions = {};
+
+        console.log(`[DEBUG] INFO ROUND ended, starting ROUND 1 in room ${roomId}`);
+        io.to(roomId).emit("newRound", room.currentRound);
+
+        // Start normal gameplay
+        startRoundTimer(io, roomId);
+      }
+    }, 1000);
+
+    return; // 🚨 skip the normal round code
+  }
 
   let roundTime = roundDuration;
   console.log(`[DEBUG] Round ${room.currentRound} started in room ${roomId}`);

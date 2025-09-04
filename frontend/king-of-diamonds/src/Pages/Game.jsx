@@ -13,7 +13,7 @@ export default function Game({ user }) {
   const [socket, setSocket] = useState(null);
   const [players, setPlayers] = useState([]);
   const [scores, setScores] = useState({});
-  const [currentRound, setCurrentRound] = useState(1);
+  const [currentRound, setCurrentRound] = useState(0);
   const [chosenNumber, setChosenNumber] = useState(null);
   const [roundTime, setRoundTime] = useState(30);
   const [interRoundTime, setInterRoundTime] = useState(0);
@@ -36,6 +36,9 @@ export default function Game({ user }) {
       name: user?.displayName,
       photoURL: user?.photoURL,
     });
+    newSocket.on("infoRoundTimer", (time) => {
+  setRoundTime(time);
+});
 
     newSocket.on("joinedRoom", (room) => {
       setPlayers(room.players);
@@ -76,7 +79,10 @@ export default function Game({ user }) {
       setInterRoundTime(9999); // freeze inter-round
     });
 
-    return () => newSocket.disconnect();
+    return () => {
+  newSocket.off("infoRoundTimer");
+  newSocket.disconnect();
+};
   }, [roomId, userId, navigate]);
 
   // Countdown for active round
@@ -101,12 +107,26 @@ export default function Game({ user }) {
 
   const isEliminated = eliminatedPlayers.includes(userId);
 
-  return (
+return (
     <div className="game-container">
-      <h2>Round {currentRound}</h2>
-
-      {interRoundTime > 0 ? (
+      {/* ===== ROUND 0 → RULES SCREEN ===== */}
+      {currentRound === 0 ? (
+        <div className="rules-screen">
+          <h2>📜 Game Rules</h2>
+          <ul>
+            <li>Each player picks a number between 0–100.</li>
+            <li>The target = average × 0.8</li>
+            <li>Closest player(s) win 🏆</li>
+            <li>Others lose -1 point</li>
+            <li>At -10 points → ❌ eliminated</li>
+            <li>If all submit 0 → everyone gets -1</li>
+          </ul>
+          <p>Round 1 starts in: {roundTime}s</p>
+        </div>
+      ) : interRoundTime > 0 ? (
+        /* ===== INTER-ROUND ===== */
         <div className="inter-round">
+          <h2>Round {currentRound}</h2>
           <h3>Inter-round</h3>
           {gameClearWinner ? (
             <p>
@@ -150,7 +170,9 @@ export default function Game({ user }) {
           </div>
         </div>
       ) : (
+        /* ===== ACTIVE ROUND ===== */
         <div className="round">
+          <h2>Round {currentRound}</h2>
           {isEliminated ? (
             <p style={{ color: "red" }}>
               ❌ You are eliminated. Spectating only.
@@ -169,7 +191,6 @@ export default function Game({ user }) {
             )}
           </div>
 
-          {/* ✅ Number selection disabled if eliminated */}
           {!isEliminated && (
             <div className="number-selection">
               {[...Array(101).keys()].map((n) => (
@@ -186,20 +207,17 @@ export default function Game({ user }) {
         </div>
       )}
 
+      {/* ===== LIVE SCORES ===== */}
       <div className="scores">
         <h4>Live Scores</h4>
         <ul>
           {players.map((p) => {
             const isSelf = p.userId === userId;
-
             return (
               <li key={p.userId} className="player-item">
-                {/* Avatar Circle */}
                 <div className={`avatar-circle ${isSelf ? "self" : "other"}`}>
                   👤
                 </div>
-
-                {/* Name + Score/Submission */}
                 <div className="player-info">
                   <span className={isSelf ? "self-name" : ""}>
                     {p.name ?? p.userId}

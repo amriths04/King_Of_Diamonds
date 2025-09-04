@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import io from "socket.io-client";
+import {initSocket,onEvent,offEvent,emitEvent,disconnectSocket} from "../socket";
 import "../styles/Game.css";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
@@ -10,7 +10,6 @@ export default function Game({ user }) {
   const navigate = useNavigate();
   const { roomId, userId } = location.state || {};
 
-  const [socket, setSocket] = useState(null);
   const [players, setPlayers] = useState([]);
   const [scores, setScores] = useState({});
   const [currentRound, setCurrentRound] = useState(0);
@@ -20,46 +19,38 @@ export default function Game({ user }) {
   const [submissions, setSubmissions] = useState({});
   const [target, setTarget] = useState(0);
   const [winners, setWinners] = useState([]);
-
   const [eliminatedPlayers, setEliminatedPlayers] = useState([]);
   const [gameClearWinner, setGameClearWinner] = useState(null);
 
   useEffect(() => {
     if (!roomId || !userId) navigate("/");
 
-    const newSocket = io(SOCKET_URL);
-    setSocket(newSocket);
-
-    newSocket.emit("joinGameRoom", {
+    const socket = initSocket(SOCKET_URL, {
       roomId,
       userId,
       name: user?.displayName,
       photoURL: user?.photoURL,
     });
-    newSocket.on("infoRoundTimer", (time) => {
-  setRoundTime(time);
-});
 
-    newSocket.on("joinedRoom", (room) => {
+    onEvent("infoRoundTimer", setRoundTime);
+
+    onEvent("joinedRoom", (room) => {
       setPlayers(room.players);
       setScores(room.scores);
       setCurrentRound(room.currentRound);
     });
 
-    // Round ends → inter-round
-    newSocket.on("roundResult", ({ submissions, target, winners, scores }) => {
-   setSubmissions(submissions);
-   setTarget(target);
-   setWinners(winners);   // now an array
-   setScores(scores);
-   setInterRoundTime(30); // start inter-round timer
- });
+    onEvent("roundResult", ({ submissions, target, winners, scores }) => {
+      setSubmissions(submissions);
+      setTarget(target);
+      setWinners(winners);
+      setScores(scores);
+      setInterRoundTime(30);
+    });
 
-    // Inter-round countdown
-    newSocket.on("interRoundTimer", (time) => setInterRoundTime(time));
+    onEvent("interRoundTimer", setInterRoundTime);
 
-    // New round starts
-    newSocket.on("newRound", (roundNum) => {
+    onEvent("newRound", (roundNum) => {
       setCurrentRound(roundNum);
       setChosenNumber(null);
       setSubmissions({});
@@ -68,46 +59,40 @@ export default function Game({ user }) {
       setRoundTime(30);
     });
 
-    // 🚨 Player eliminated
-    newSocket.on("playerEliminated", ({ playerId }) => {
+    onEvent("playerEliminated", ({ playerId }) => {
       setEliminatedPlayers((prev) => [...prev, playerId]);
     });
 
-    // 🏆 Game clear
-    newSocket.on("gameClear", ({ winner }) => {
+    onEvent("gameClear", ({ winner }) => {
       setGameClearWinner(winner);
-      setInterRoundTime(9999); // freeze inter-round
+      setInterRoundTime(9999);
     });
 
     return () => {
-  newSocket.off("infoRoundTimer");
-  newSocket.disconnect();
-};
-  }, [roomId, userId, navigate]);
+      offEvent("infoRoundTimer");
+      disconnectSocket();
+    };
+  }, [roomId, userId, navigate, user]);
 
-  // Countdown for active round
+  // Round timer + auto-submit
   useEffect(() => {
-    if (!socket) return;
-
-    socket.on("roundTimer", (time) => {
+    onEvent("roundTimer", (time) => {
       setRoundTime(time);
 
       if (time === 0) {
         const finalChoice = chosenNumber ?? 0;
-        console.log("⏰ Server says round ended, submitting:", finalChoice);
-
-        socket.emit("submitNumber", { roomId, userId, number: finalChoice });
+        emitEvent("submitNumber", { roomId, userId, number: finalChoice });
       }
     });
 
-    return () => socket.off("roundTimer");
-  }, [socket, chosenNumber, roomId, userId]);
+    return () => offEvent("roundTimer");
+  }, [chosenNumber, roomId, userId]);
 
   const handlePickNumber = (num) => setChosenNumber(num);
 
   const isEliminated = eliminatedPlayers.includes(userId);
 
-return (
+  return (
     <div className="game-container">
       {/* ===== ROUND 0 → RULES SCREEN ===== */}
       {currentRound === 0 ? (
@@ -144,14 +129,11 @@ return (
 
                 return (
                   <li key={p.userId} className="player-item">
-                    {/* Avatar Circle */}
                     <div
                       className={`avatar-circle ${isSelf ? "self" : "other"}`}
                     >
                       👤
                     </div>
-
-                    {/* Name + Score/Submission */}
                     <div className="player-info">
                       <span className={isSelf ? "self-name" : ""}>
                         {p.name ?? p.userId}

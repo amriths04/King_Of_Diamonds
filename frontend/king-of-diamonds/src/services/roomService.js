@@ -23,7 +23,7 @@ export const createRoom = async ({ hostId, roomCode, hostName }) => {
   return { ...roomData, roomId: roomRef.id };
 };
 
-const MAX_PLAYERS = 2;
+const MAX_PLAYERS = 7;
 // Join an existing room
 export const joinRoom = async ({ roomCode, userId }) => {
   if (!roomCode || !userId) {

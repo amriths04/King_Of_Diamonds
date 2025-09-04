@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { doc, onSnapshot, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import "../styles/Lobby.css";
+import * as roomService from "../services/roomService";
 
 export default function Lobby({ user }) {
   const navigate = useNavigate();
@@ -62,18 +63,9 @@ export default function Lobby({ user }) {
     if (!stateRoomId || !userId) return;
 
     try {
-      const roomRef = doc(db, "rooms", stateRoomId);
-      const roomSnap = await getDoc(roomRef);
-      if (!roomSnap.exists()) return;
-
-      const roomData = roomSnap.data();
-      if (roomData.hostId === userId) await deleteDoc(roomRef);
-      else {
-        const updatedPlayers = (roomData.players || []).filter(p => p.userId !== userId);
-        await updateDoc(roomRef, { players: updatedPlayers });
-      }
+      await roomService.leaveRoom({ roomId: stateRoomId, userId });
     } catch (err) {
-      console.error(err);
+      console.error("Failed to leave room:", err);
     } finally {
       navigate("/");
     }

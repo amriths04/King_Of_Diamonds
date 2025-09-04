@@ -2,24 +2,27 @@ import { io } from "socket.io-client";
 
 let socket;
 
-export const initiateSocket = (serverUrl, roomId, userId) => {
+export const initSocket = (serverUrl, { roomId, userId, name, photoURL }) => {
   socket = io(serverUrl);
 
-  socket.emit("joinGameRoom", { roomId, userId });
+  socket.emit("joinGameRoom", { roomId, userId, name, photoURL });
 
-  socket.on("joinedRoom", (roomData) => {
-    console.log("Joined room:", roomData);
-  });
+  return socket;
 };
 
-export const subscribeToRoundResult = (callback) => {
+export const onEvent = (event, callback) => {
   if (!socket) return;
-  socket.on("roundResult", callback);
+  socket.on(event, callback);
 };
 
-export const submitNumber = (roomId, userId, number) => {
+export const offEvent = (event) => {
   if (!socket) return;
-  socket.emit("submitNumber", { roomId, userId, number });
+  socket.off(event);
+};
+
+export const emitEvent = (event, data) => {
+  if (!socket) return;
+  socket.emit(event, data);
 };
 
 export const disconnectSocket = () => {

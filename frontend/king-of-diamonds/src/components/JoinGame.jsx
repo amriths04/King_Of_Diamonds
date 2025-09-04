@@ -57,7 +57,7 @@ const handleJoin = async (code) => {
         <ul>
           {availableRooms.map((room) => (
             <li key={room.roomId}>
-              {room.roomCode} ({room.players?.length || 0}/5)
+              {room.roomCode} ({room.players?.length || 0}/7)
               <button onClick={() => handleJoin(room.roomCode)}>Join</button>
             </li>
           ))}

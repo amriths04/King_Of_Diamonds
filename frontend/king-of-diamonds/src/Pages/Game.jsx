@@ -45,7 +45,7 @@ export default function Game({ user }) {
       setTarget(target);
       setWinners(winners);
       setScores(scores);
-      setInterRoundTime(30);
+      setInterRoundTime(20);
     });
 
     onEvent("interRoundTimer", setInterRoundTime);
@@ -56,7 +56,7 @@ export default function Game({ user }) {
       setSubmissions({});
       setTarget(0);
       setWinners([]);
-      setRoundTime(30);
+      setRoundTime(20);
     });
 
     onEvent("playerEliminated", ({ playerId }) => {

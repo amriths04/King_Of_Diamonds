@@ -189,8 +189,8 @@ function startRoundTimer(io, roomId) {
         // ✅ If game ends, delay GAME CLEAR so UI shows results
         if (survivors.length === 1) {
           setTimeout(() => {
-            io.to(roomId).emit("gameClear", { winner: survivors[0].userId });
-            console.log(`[DEBUG] GAME CLEAR for ${survivors[0].userId}`);
+            io.to(roomId).emit("gameClear", { winner: survivors[0].name });
+            console.log(`[DEBUG] GAME CLEAR for ${survivors[0].name}`);
           }, 3000);
           return;
         }

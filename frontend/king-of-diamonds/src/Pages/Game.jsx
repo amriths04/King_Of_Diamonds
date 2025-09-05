@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {initSocket,onEvent,offEvent,emitEvent,disconnectSocket} from "../socket";
+import {
+  initSocket,
+  onEvent,
+  offEvent,
+  emitEvent,
+  disconnectSocket,
+} from "../socket";
 import "../styles/Game.css";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
@@ -99,26 +105,33 @@ export default function Game({ user }) {
         <div className="rules-screen">
           <h2>📜 Game Rules</h2>
           <ul>
-            <li>Each player picks a number between 0–100.</li>
-            <li>The target = average × 0.8</li>
-            <li>Closest player(s) win 🏆</li>
-            <li>Others lose -1 point</li>
-            <li>At -10 points → ❌ eliminated</li>
-            <li>If all submit 0 → everyone gets -1</li>
+            <li>Contestants chooses a number between 0 and 100.</li>
+            <li>The result = average × 0.8</li>
+            <li>
+              The person whose number is the closest to that result is the
+              winner.🏆
+            </li>
+            <li>Others lose a point</li>
+            <li>GAME OVER for the player who reaches -10 points</li>
+            <li>GAME CLEAR for the last remaining player</li>
           </ul>
           <p>Round 1 starts in: {roundTime}s</p>
         </div>
       ) : interRoundTime > 0 ? (
         /* ===== INTER-ROUND ===== */
         <div className="inter-round">
-          <h2>Round {currentRound}</h2>
-          <h3>Inter-round</h3>
+          <div className="round-header">
+            <h2>Round {currentRound}</h2>
+            {!gameClearWinner && (
+              <div className="round-timer">{interRoundTime}s</div>
+            )}
+          </div>
           {gameClearWinner ? (
             <p>
               🎉 GAME CLEAR! Winner is <strong>{gameClearWinner}</strong>
             </p>
           ) : (
-            <p>Next round starts in: {interRoundTime}s</p>
+            <p></p>
           )}
 
           <div className="results">
@@ -154,36 +167,52 @@ export default function Game({ user }) {
       ) : (
         /* ===== ACTIVE ROUND ===== */
         <div className="round">
-          <h2>Round {currentRound}</h2>
-          {isEliminated ? (
+          <div className="round-header">
+            <h2>Round {currentRound}</h2>
+            {!isEliminated && <div className="round-timer">{roundTime}s</div>}
+          </div>
+
+          {isEliminated && (
             <p style={{ color: "red" }}>
               ❌ You are eliminated. Spectating only.
             </p>
-          ) : (
-            <p>Time remaining: {roundTime}s</p>
           )}
 
           <div className="chosen-panel">
-            {chosenNumber !== null ? (
-              <p>
-                <strong>Chosen Number:</strong> {chosenNumber}
-              </p>
-            ) : (
-              <p>No number chosen yet</p>
-            )}
+            <div className="chosen-number">
+              {chosenNumber !== null ? chosenNumber : ""}
+            </div>
           </div>
 
           {!isEliminated && (
             <div className="number-selection">
-              {[...Array(101).keys()].map((n) => (
+              {/* First row: only 0 at rightmost */}
+              <div className="row first-row">
+                {[...Array(9)].map((_, i) => (
+                  <div key={i} className="empty"></div>
+                ))}
                 <button
-                  key={n}
-                  className={chosenNumber === n ? "selected" : ""}
-                  onClick={() => handlePickNumber(n)}
+                  className={chosenNumber === 0 ? "selected" : ""}
+                  onClick={() => handlePickNumber(0)}
                 >
-                  {n}
+                  0
                 </button>
-              ))}
+              </div>
+
+              {/* Remaining numbers 1–100 */}
+              <div className="grid-numbers">
+                {[...Array(100).keys()]
+                  .map((n) => n + 1)
+                  .map((num) => (
+                    <button
+                      key={num}
+                      className={chosenNumber === num ? "selected" : ""}
+                      onClick={() => handlePickNumber(num)}
+                    >
+                      {num}
+                    </button>
+                  ))}
+              </div>
             </div>
           )}
         </div>
